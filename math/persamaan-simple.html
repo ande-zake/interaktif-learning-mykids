@@ -584,6 +584,9 @@
     function maybePlaceBoxRandomly(data) {
       const boxOnRight = Math.random() < 0.5;
       data.boxHome = boxOnRight ? 'right' : 'left';
+      // #region agent log
+      fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'E',location:'persamaan-simple.html:maybePlaceBoxRandomly',message:'box side roll',data:{boxOnRight:boxOnRight,boxHome:data.boxHome,leftTypes:(data.left||[]).map(function(i){return i.type;}),rightTypes:(data.right||[]).map(function(i){return i.type;})},timestamp:Date.now()})}).catch(function(){});
+      // #endregion
 
       if (boxOnRight) {
         const newLeft = data.right.map((item) => Object.assign({}, item, { currentSide: 'left' }));
@@ -836,6 +839,12 @@
       card.id = item.id;
       card.classList.add('card');
       const canDragFromRight = (item.type === 'box' || item.type === 'number') && item.currentSide === 'right';
+      const willAttachDrag = item.type === 'op' || canDragFromRight;
+      // #region agent log
+      if (item.type === 'box' || item.type === 'number') {
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'A',location:'persamaan-simple.html:createCard',message:'card drag attach',data:{type:item.type,id:item.id,currentSide:item.currentSide,canDragFromRight:canDragFromRight,willAttachDrag:willAttachDrag,label:item.label||item.val},timestamp:Date.now()})}).catch(function(){});
+      }
+      // #endregion
 
       if (item.type === 'box') {
         card.classList.add('box');
@@ -870,16 +879,25 @@
       card.addEventListener('dragstart', (e) => {
         activeDragItem = itemData;
         e.dataTransfer.setData('text/plain', itemData.id);
+        // #region agent log
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:dragstart',message:'dragstart fired',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide},timestamp:Date.now()})}).catch(function(){});
+        // #endregion
       });
 
       card.addEventListener('touchstart', (e) => {
         activeDragItem = itemData;
+        // #region agent log
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:touchstart',message:'touchstart fired',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide},timestamp:Date.now()})}).catch(function(){});
+        // #endregion
       }, { passive: true });
 
       card.addEventListener('touchend', (e) => {
         const touch = e.changedTouches[0];
         const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
         const zone = targetElement ? targetElement.closest('.side-zone') : null;
+        // #region agent log
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:touchend',message:'touchend drop check',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide,zoneSide:zone?zone.dataset.side:null,targetTag:targetElement?targetElement.tagName:null,targetClass:targetElement?targetElement.className:null},timestamp:Date.now()})}).catch(function(){});
+        // #endregion
 
         if (zone && zone.dataset.side !== activeDragItem.currentSide) {
           executeMove(activeDragItem, zone.dataset.side);
@@ -912,9 +930,15 @@
       const oldSide = item.currentSide;
       const goingRight = oldSide === 'left' && newSide === 'right';
       const goingLeft = oldSide === 'right' && newSide === 'left';
+      // #region agent log
+      fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'D',location:'persamaan-simple.html:executeMove',message:'move attempted',data:{type:item.type,id:item.id,oldSide:oldSide,newSide:newSide,goingRight:goingRight,goingLeft:goingLeft},timestamp:Date.now()})}).catch(function(){});
+      // #endregion
 
       // Kotak & angka: tidak boleh kiri → kanan, boleh kanan → kiri
       if ((item.type === 'box' || item.type === 'number') && goingRight) {
+        // #region agent log
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'D',location:'persamaan-simple.html:executeMove:blocked',message:'move blocked L->R',data:{type:item.type,id:item.id,oldSide:oldSide,newSide:newSide},timestamp:Date.now()})}).catch(function(){});
+        // #endregion
         showMoveWarning('⚠️ Kotak 🎁 dan angka tidak bisa digeser ke kanan. Geser dari kanan ke kiri saja.');
         return;
       }
