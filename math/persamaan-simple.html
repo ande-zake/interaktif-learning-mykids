@@ -142,6 +142,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 14px;
       width: 100%;
       margin: 14px 0 20px 0;
@@ -231,6 +232,46 @@
       color: #F3F4F6;
       min-width: 50px;
       border: 1px solid #6B7280;
+    }
+
+    .card.can-drag-left {
+      cursor: grab;
+      border: 2px dashed #FBBF24;
+    }
+
+    /* Kurung grup: hitung yang di dalam dulu */
+    .paren-group {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 8px;
+      background: rgba(251, 191, 36, 0.12);
+      border: 2px solid #FBBF24;
+      border-radius: 18px;
+      flex-wrap: wrap;
+    }
+
+    .paren-mark {
+      font-size: 38px;
+      font-weight: bold;
+      color: #FBBF24;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .mix-hint {
+      display: none;
+      width: 100%;
+      background: #422006;
+      border: 2px solid #F59E0B;
+      color: #FDE68A;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 4px;
+      line-height: 1.45;
     }
 
     /* Area Form Jawaban & Challenge */
@@ -381,7 +422,7 @@
     <button class="level-btn active" onclick="selectLevel(0)">Level 1: Tambah & Kurang</button>
     <button class="level-btn" onclick="selectLevel(1)">Level 2: Perkalian</button>
     <button class="level-btn" onclick="selectLevel(2)">Level 3: Pembagian</button>
-    <button class="level-btn" onclick="selectLevel(3)">Level 4: Jurus Campuran</button>
+    <button class="level-btn" onclick="selectLevel(3)">Level 4: Campuran ( )</button>
   </div>
 
   <div class="game-board">
@@ -389,6 +430,8 @@
       <button class="action-btn random-btn" onclick="generateRandomProblem()">🎲 Ganti Soal Baru</button>
       <button class="action-btn reset-btn" onclick="resetCurrentProblem()">🔄 Ulangi Posisi</button>
     </div>
+
+    <div class="mix-hint" id="mix-hint"></div>
 
     <div class="equation-container">
       <div class="side-zone" id="left-zone" data-side="left"></div>
@@ -522,13 +565,25 @@
           targetAnswer: actualX
         };
       } else {
-        // Campuran: (x * a) + b = target
-        const a = getRandomInt(2, 4);
-        const actualX = getRandomInt(2, 6);
-        const b = getRandomInt(1, 8);
-        const target = (actualX * a) + b;
+        return createMixedLevelData();
+      }
+    }
 
+    // Level 4: campuran perkalian & penjumlahan/pengurangan + kurung
+    function createMixedLevelData() {
+      const patternIdx = getRandomInt(0, 2);
+      const a = getRandomInt(2, 4);
+      const actualX = getRandomInt(2, 6);
+      const b = getRandomInt(1, 6);
+
+      if (patternIdx === 0) {
+        // (x × a) + b = target  → geser +b dulu, baru ×a
+        const target = (actualX * a) + b;
         return {
+          mixedPattern: 'mul-then-add',
+          innerOpIds: ['op1'],
+          explain: `(🎁 × ${a}) + ${b} = ${target}`,
+          orderHint: `Hitung yang di dalam kurung dulu: perkalian. Geser dulu + ${b} (luar kurung), baru × ${a}.`,
           left: [
             { id: 'box', type: 'box', label: '🎁' },
             { id: 'op1', type: 'op', op: '×', val: a, currentSide: 'left' },
@@ -538,6 +593,73 @@
           targetAnswer: actualX
         };
       }
+
+      if (patternIdx === 1) {
+        // (x × a) − b = target  → geser −b dulu, baru ×a
+        const product = actualX * a;
+        const sub = Math.min(b, product - 1);
+        const target = product - sub;
+        return {
+          mixedPattern: 'mul-then-sub',
+          innerOpIds: ['op1'],
+          explain: `(🎁 × ${a}) − ${sub} = ${target}`,
+          orderHint: `Hitung yang di dalam kurung dulu: perkalian. Geser dulu − ${sub} (luar kurung), baru × ${a}.`,
+          left: [
+            { id: 'box', type: 'box', label: '🎁' },
+            { id: 'op1', type: 'op', op: '×', val: a, currentSide: 'left' },
+            { id: 'op2', type: 'op', op: '-', val: sub, currentSide: 'left' }
+          ],
+          right: [{ id: 'res', type: 'number', val: target }],
+          targetAnswer: actualX
+        };
+      }
+
+      // (x + b) × a = target  → geser ×a dulu (luar kurung), baru +b
+      const target = (actualX + b) * a;
+      return {
+        mixedPattern: 'add-then-mul',
+        innerOpIds: ['op1'],
+        explain: `(🎁 + ${b}) × ${a} = ${target}`,
+        orderHint: `Hitung yang di dalam kurung dulu: penjumlahan. Geser dulu × ${a} (luar kurung), baru + ${b}.`,
+        left: [
+          { id: 'box', type: 'box', label: '🎁' },
+          { id: 'op1', type: 'op', op: '+', val: b, currentSide: 'left' },
+          { id: 'op2', type: 'op', op: '×', val: a, currentSide: 'left' }
+        ],
+        right: [{ id: 'res', type: 'number', val: target }],
+        targetAnswer: actualX
+      };
+    }
+
+    function applyOp(leftVal, op, rightVal) {
+      if (op === '+') return leftVal + rightVal;
+      if (op === '-') return leftVal - rightVal;
+      if (op === '×') return leftVal * rightVal;
+      if (op === '÷') return leftVal / rightVal;
+      return leftVal;
+    }
+
+    function formatToken(item) {
+      if (item.type === 'number') return `${item.val}`;
+      if (item.type === 'box') return item.label;
+      return `${item.op} ${item.val}`;
+    }
+
+    function makeParen(label) {
+      const el = document.createElement('span');
+      el.className = 'paren-mark';
+      el.textContent = label;
+      el.setAttribute('aria-hidden', 'true');
+      return el;
+    }
+
+    function appendParenGroup(parent, items) {
+      const wrap = document.createElement('div');
+      wrap.className = 'paren-group';
+      wrap.appendChild(makeParen('('));
+      items.forEach((it) => wrap.appendChild(createCard(it)));
+      wrap.appendChild(makeParen(')'));
+      parent.appendChild(wrap);
     }
 
     function selectLevel(idx) {
@@ -546,6 +668,17 @@
         btn.classList.toggle('active', i === idx);
       });
       generateRandomProblem();
+    }
+
+    function updateMixHint() {
+      const hintEl = document.getElementById('mix-hint');
+      if (currentLevelIdx === 3 && currentData && currentData.explain) {
+        hintEl.style.display = 'block';
+        hintEl.innerHTML = `Kurung <b>( )</b> artinya hitung yang di dalam dulu!<br>Soal: <b>${currentData.explain}</b><br>${currentData.orderHint}`;
+      } else {
+        hintEl.style.display = 'none';
+        hintEl.innerHTML = '';
+      }
     }
 
     function generateRandomProblem() {
@@ -562,27 +695,68 @@
     }
 
     function renderBoard() {
-      const leftZone = document.getElementById('left-zone');
-      const rightZone = document.getElementById('right-zone');
-
-      leftZone.innerHTML = '';
-      rightZone.innerHTML = '';
-
-      currentData.left.forEach(item => leftZone.appendChild(createCard(item)));
-      currentData.right.forEach(item => rightZone.appendChild(createCard(item)));
-
+      currentData.left.forEach((item) => { item.currentSide = 'left'; });
+      currentData.right.forEach((item) => { item.currentSide = 'right'; });
+      renderZone(document.getElementById('left-zone'), currentData.left, 'left');
+      renderZone(document.getElementById('right-zone'), currentData.right, 'right');
       setupDropZones();
+      updateMixHint();
       updateStatusGuide();
+    }
+
+    function splitInnerOuter(items) {
+      const innerIds = currentData.innerOpIds || [];
+      return {
+        box: items.find((i) => i.type === 'box'),
+        numbers: items.filter((i) => i.type === 'number'),
+        innerOps: items.filter((i) => i.type === 'op' && innerIds.includes(i.id)),
+        outerOps: items.filter((i) => i.type === 'op' && !innerIds.includes(i.id))
+      };
+    }
+
+    function renderZone(zoneEl, items, side) {
+      zoneEl.innerHTML = '';
+
+      if (!currentData.mixedPattern) {
+        items.forEach((item) => zoneEl.appendChild(createCard(item)));
+        return;
+      }
+
+      const { box, numbers, innerOps, outerOps } = splitInnerOuter(items);
+
+      if (side === 'left') {
+        if (box && innerOps.length > 0) {
+          appendParenGroup(zoneEl, [box, ...innerOps]);
+          outerOps.forEach((op) => zoneEl.appendChild(createCard(op)));
+          return;
+        }
+        items.forEach((item) => zoneEl.appendChild(createCard(item)));
+        return;
+      }
+
+      if (outerOps.length > 0 && innerOps.length > 0) {
+        appendParenGroup(zoneEl, [...numbers, ...outerOps]);
+        innerOps.forEach((op) => zoneEl.appendChild(createCard(op)));
+        return;
+      }
+
+      items.forEach((item) => zoneEl.appendChild(createCard(item)));
     }
 
     function createCard(item) {
       const card = document.createElement('div');
       card.id = item.id;
       card.classList.add('card');
+      const canDragFromRight = (item.type === 'box' || item.type === 'number') && item.currentSide === 'right';
 
       if (item.type === 'box') {
         card.classList.add('box');
         card.innerText = item.label;
+        if (canDragFromRight) {
+          card.classList.add('can-drag-left');
+          card.draggable = true;
+          setupDragAndTouch(card, item);
+        }
       } else if (item.type === 'op') {
         card.classList.add('draggable-op');
         card.innerText = `${item.op} ${item.val}`;
@@ -591,6 +765,11 @@
       } else if (item.type === 'number') {
         card.classList.add('number-static');
         card.innerText = item.val;
+        if (canDragFromRight) {
+          card.classList.add('can-drag-left');
+          card.draggable = true;
+          setupDragAndTouch(card, item);
+        }
       }
 
       return card;
@@ -635,16 +814,86 @@
       });
     }
 
+    function showMoveWarning(message) {
+      const feedback = document.getElementById('feedback');
+      feedback.className = 'feedback warning';
+      feedback.innerText = message;
+    }
+
     function executeMove(item, newSide) {
       const oldSide = item.currentSide;
+      const goingRight = oldSide === 'left' && newSide === 'right';
+      const goingLeft = oldSide === 'right' && newSide === 'left';
+
+      // Kotak & angka: tidak boleh kiri → kanan, boleh kanan → kiri
+      if ((item.type === 'box' || item.type === 'number') && goingRight) {
+        showMoveWarning('⚠️ Kotak 🎁 dan angka tidak bisa digeser ke kanan. Geser dari kanan ke kiri saja.');
+        return;
+      }
+
+      const innerIds = currentData.innerOpIds || [];
+      if (currentData.mixedPattern && innerIds.includes(item.id) && goingRight) {
+        const outerStillHere = currentData[item.currentSide].filter(
+          (i) => i.type === 'op' && !innerIds.includes(i.id)
+        );
+        if (outerStillHere.length > 0) {
+          const firstOuter = outerStillHere[0];
+          showMoveWarning(`⚠️ Geser dulu yang di LUAR kurung (${firstOuter.op} ${firstOuter.val}), baru yang di dalam!`);
+          return;
+        }
+      }
+
       currentData[oldSide] = currentData[oldSide].filter(i => i.id !== item.id);
-      
-      // Pembalikan tanda otomatis
-      item.op = inverseOps[item.op];
+
+      if (item.type === 'number' && goingLeft) {
+        item.type = 'op';
+        item.op = '-';
+        item.fromNumber = true;
+      } else if (item.fromNumber && goingRight) {
+        item.type = 'number';
+        delete item.op;
+      } else if (item.type === 'op') {
+        item.op = inverseOps[item.op];
+      }
+
       item.currentSide = newSide;
       currentData[newSide].push(item);
 
+      if (currentData.right.length === 0) {
+        currentData.right.push({ id: 'res-zero', type: 'number', val: 0, currentSide: 'right' });
+      }
+      const rightNumbers = currentData.right.filter((i) => i.type === 'number');
+      if (rightNumbers.length > 1) {
+        currentData.right = currentData.right.filter((i) => i.id !== 'res-zero');
+      }
+
+      document.getElementById('feedback').innerText = '';
       renderBoard();
+    }
+
+    function buildMixedFormula(items) {
+      const { numbers, innerOps, outerOps } = splitInnerOuter(items);
+      if (outerOps.length > 0 && innerOps.length > 0) {
+        const inside = [...numbers, ...outerOps].map(formatToken).join(' ');
+        const outside = innerOps.map(formatToken).join(' ');
+        return `(${inside}) ${outside}`;
+      }
+      return items.filter((i) => i.type !== 'box').map(formatToken).join(' ');
+    }
+
+    function buildMixedSteps(items) {
+      const { numbers, innerOps, outerOps } = splitInnerOuter(items);
+      if (!numbers.length || !outerOps.length || !innerOps.length) return '';
+
+      let mid = numbers[0].val;
+      const step1expr = [numbers[0], ...outerOps].map(formatToken).join(' ');
+      outerOps.forEach((op) => { mid = applyOp(mid, op.op, op.val); });
+
+      let result = mid;
+      const step2expr = [`${mid}`, ...innerOps.map(formatToken)].join(' ');
+      innerOps.forEach((op) => { result = applyOp(result, op.op, op.val); });
+
+      return `Langkah 1 (dalam kurung): ${step1expr} = ${mid}. Lalu langkah 2: ${step2expr} = ${result}.`;
     }
 
     function updateStatusGuide() {
@@ -652,12 +901,21 @@
       const preview = document.getElementById('calc-preview');
 
       if (remainingLeftOps.length === 0) {
-        let formula = '';
-        currentData.right.forEach(it => {
-          if (it.type === 'number') formula += `${it.val} `;
-          if (it.type === 'op') formula += `${it.op} ${it.val} `;
-        });
-        preview.innerHTML = `Kotak sudah sendirian! Selesaikan: <b style="color:#38BDF8; font-size:20px;">${formula}</b>`;
+        const formula = currentData.mixedPattern
+          ? buildMixedFormula(currentData.right)
+          : currentData.right.map(formatToken).join(' ');
+        const steps = currentData.mixedPattern ? buildMixedSteps(currentData.right) : '';
+        preview.innerHTML = `Kotak sudah sendirian! Selesaikan: <b style="color:#38BDF8; font-size:20px;">${formula}</b>`
+          + (steps ? `<br><span style="color:#FDE68A; font-size:14px;">${steps}</span>` : '');
+      } else if (currentData.mixedPattern) {
+        const outerLeft = currentData.left.filter(
+          (i) => i.type === 'op' && !(currentData.innerOpIds || []).includes(i.id)
+        );
+        if (outerLeft.length > 0) {
+          preview.innerText = `Geser dulu kartu di LUAR kurung (${outerLeft[0].op} ${outerLeft[0].val}) ke kanan.`;
+        } else {
+          preview.innerText = `Bagus! Sekarang geser kartu di dalam kurung ke kanan agar 🎁 sendirian.`;
+        }
       } else {
         preview.innerText = `Geser ${remainingLeftOps.length} kartu lagi ke kanan agar kotak 🎁 sendirian!`;
       }
