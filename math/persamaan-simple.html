@@ -594,9 +594,6 @@
     function maybePlaceBoxRandomly(data) {
       const boxOnRight = Math.random() < 0.5;
       data.boxHome = boxOnRight ? 'right' : 'left';
-      // #region agent log
-      fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'E',location:'persamaan-simple.html:maybePlaceBoxRandomly',message:'box side roll',data:{boxOnRight:boxOnRight,boxHome:data.boxHome,leftTypes:(data.left||[]).map(function(i){return i.type;}),rightTypes:(data.right||[]).map(function(i){return i.type;})},timestamp:Date.now()})}).catch(function(){});
-      // #endregion
 
       if (boxOnRight) {
         const newLeft = data.right.map((item) => Object.assign({}, item, { currentSide: 'left' }));
@@ -848,13 +845,6 @@
       const card = document.createElement('div');
       card.id = item.id;
       card.classList.add('card');
-      const canDragFromRight = (item.type === 'box' || item.type === 'number') && item.currentSide === 'right';
-      const willAttachDrag = item.type === 'op' || canDragFromRight;
-      // #region agent log
-      if (item.type === 'box' || item.type === 'number') {
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'A',location:'persamaan-simple.html:createCard',message:'card drag attach',data:{type:item.type,id:item.id,currentSide:item.currentSide,canDragFromRight:canDragFromRight,willAttachDrag:willAttachDrag,label:item.label||item.val},timestamp:Date.now()})}).catch(function(){});
-      }
-      // #endregion
 
       if (item.type === 'box') {
         card.classList.add('box');
@@ -871,12 +861,6 @@
         card.draggable = true;
         setupDragAndTouch(card, item);
       }
-
-      // #region agent log
-      if (item.type === 'box' || item.type === 'number') {
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'A',location:'persamaan-simple.html:createCard:attached',message:'drag attached both sides',data:{type:item.type,id:item.id,currentSide:item.currentSide,draggable:card.draggable},timestamp:Date.now()})}).catch(function(){});
-      }
-      // #endregion
 
       return card;
     }
@@ -913,17 +897,7 @@
       card.addEventListener('dragstart', (e) => {
         activeDragItem = itemData;
         e.dataTransfer.setData('text/plain', itemData.id);
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:dragstart',message:'dragstart fired',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
       });
-
-      card.addEventListener('touchstart', (e) => {
-        activeDragItem = itemData;
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:touchstart',message:'touchstart fired',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
-      }, { passive: true });
 
       card.addEventListener('pointerdown', (e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -932,9 +906,6 @@
         dragSourceCard = card;
         card.style.opacity = '0.35';
         try { card.setPointerCapture(e.pointerId); } catch (err) {}
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'C',location:'persamaan-simple.html:pointerdown',message:'pointer drag start',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide,pointerType:e.pointerType},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
       });
 
       card.addEventListener('pointermove', (e) => {
@@ -956,12 +927,7 @@
       });
 
       card.addEventListener('pointerup', (e) => {
-        const hit = zoneFromPoint(e.clientX, e.clientY);
-        const zone = hit.zone;
-        const targetElement = hit.targetElement;
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'C',location:'persamaan-simple.html:pointerup',message:'pointer drop check',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide,zoneSide:zone?zone.dataset.side:null,targetTag:targetElement?targetElement.tagName:null,targetClass:targetElement?String(targetElement.className):null},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
+        const zone = zoneFromPoint(e.clientX, e.clientY).zone;
         const moving = activeDragItem;
         clearDragGhost();
         if (moving && zone && zone.dataset.side !== moving.currentSide) {
@@ -973,15 +939,6 @@
       card.addEventListener('pointercancel', () => {
         clearDragGhost();
         activeDragItem = null;
-      });
-
-      card.addEventListener('touchend', (e) => {
-        const touch = e.changedTouches[0];
-        const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-        const zone = targetElement ? targetElement.closest('.side-zone') : null;
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'C',location:'persamaan-simple.html:touchend',message:'touchend drop check',data:{type:itemData.type,id:itemData.id,currentSide:itemData.currentSide,zoneSide:zone?zone.dataset.side:null,targetTag:targetElement?targetElement.tagName:null,targetClass:targetElement?targetElement.className:null},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
       });
     }
 
@@ -1006,25 +963,9 @@
     }
 
     function executeMove(item, newSide) {
-      if (item.type === 'box') {
-        // #region agent log
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'BOX',location:'persamaan-simple.html:executeMove:box-blocked',message:'box move rejected',data:{id:item.id,oldSide:item.currentSide,newSide:newSide},timestamp:Date.now()})}).catch(function(){});
-        // #endregion
-        return;
-      }
+      if (item.type === 'box') return;
+
       const oldSide = item.currentSide;
-      const goingRight = oldSide === 'left' && newSide === 'right';
-      const goingLeft = oldSide === 'right' && newSide === 'left';
-      // #region agent log
-      fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'pre-fix',hypothesisId:'D',location:'persamaan-simple.html:executeMove',message:'move attempted',data:{type:item.type,id:item.id,oldSide:oldSide,newSide:newSide,goingRight:goingRight,goingLeft:goingLeft},timestamp:Date.now()})}).catch(function(){});
-      // #endregion
-
-      // #region agent log
-      if ((item.type === 'box' || item.type === 'number') && goingRight) {
-        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'D',location:'persamaan-simple.html:executeMove:blocked',message:'L->R allowed after fix',data:{type:item.type,id:item.id,oldSide:oldSide,newSide:newSide},timestamp:Date.now()})}).catch(function(){});
-      }
-      // #endregion
-
       const innerIds = currentData.innerOpIds || [];
       const boxSide = getBoxSide();
       const leavingBoxSide = oldSide === boxSide && newSide !== boxSide;
@@ -1055,18 +996,17 @@
       item.currentSide = newSide;
       currentData[newSide].push(item);
 
-      if (currentData.right.length === 0) {
-        currentData.right.push({ id: 'res-zero', type: 'number', val: 0, currentSide: 'right' });
-      }
-      const rightNumbers = currentData.right.filter((i) => i.type === 'number');
-      if (rightNumbers.length > 1) {
-        currentData.right = currentData.right.filter((i) => i.id !== 'res-zero');
-      }
+      ['left', 'right'].forEach((side) => {
+        if (currentData[side].length === 0) {
+          currentData[side].push({ id: 'zero-' + side, type: 'number', val: 0, currentSide: side });
+        }
+        const nums = currentData[side].filter((i) => i.type === 'number');
+        if (nums.length > 1) {
+          currentData[side] = currentData[side].filter((i) => i.id !== 'zero-' + side && i.id !== 'res-zero');
+        }
+      });
 
       document.getElementById('feedback').innerText = '';
-      // #region agent log
-      fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'D',location:'persamaan-simple.html:executeMove:done',message:'move applied',data:{type:item.type,id:item.id,oldSide:oldSide,newSide:newSide},timestamp:Date.now()})}).catch(function(){});
-      // #endregion
       renderBoard();
     }
 
