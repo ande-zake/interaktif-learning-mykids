@@ -518,7 +518,50 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function getBoxSide(data) {
+      const source = data || currentData;
+      if (!source) return 'left';
+      if (source.left && source.left.some((i) => i.type === 'box')) return 'left';
+      if (source.right && source.right.some((i) => i.type === 'box')) return 'right';
+      return source.boxHome || 'left';
+    }
+
+    function otherSide(side) {
+      return side === 'left' ? 'right' : 'left';
+    }
+
+    function awayDirectionLabel(boxSide) {
+      return boxSide === 'left' ? 'kanan' : 'kiri';
+    }
+
+    function maybePlaceBoxRandomly(data) {
+      const boxOnRight = Math.random() < 0.5;
+      data.boxHome = boxOnRight ? 'right' : 'left';
+
+      if (boxOnRight) {
+        const newLeft = data.right.map((item) => Object.assign({}, item, { currentSide: 'left' }));
+        const newRight = data.left.map((item) => Object.assign({}, item, { currentSide: 'right' }));
+        data.left = newLeft;
+        data.right = newRight;
+
+        if (data.explain && data.explain.includes(' = ')) {
+          const parts = data.explain.split(' = ');
+          data.explain = `${parts[1]} = ${parts[0]}`;
+        }
+        if (data.orderHint) {
+          data.orderHint = data.orderHint.replace(/ke kanan/g, 'ke kiri');
+        }
+      } else {
+        data.left.forEach((item) => { item.currentSide = 'left'; });
+        data.right.forEach((item) => { item.currentSide = 'right'; });
+      }
+
+      return data;
+    }
+
     function createRandomLevelData(levelIdx) {
+      let data;
+
       if (levelIdx === 0) {
         // Tambah & Kurang
         const isPlus = Math.random() > 0.5;
@@ -528,7 +571,7 @@
         const target = isPlus ? (x + num) : (x + 10 - num);
         const actualX = isPlus ? (target - num) : (target + num);
 
-        return {
+        data = {
           left: [
             { id: 'box', type: 'box', label: '🎁' },
             { id: 'op1', type: 'op', op: op, val: num, currentSide: 'left' }
@@ -542,7 +585,7 @@
         const actualX = getRandomInt(2, 9);
         const target = actualX * a;
 
-        return {
+        data = {
           left: [
             { id: 'box', type: 'box', label: '🎁' },
             { id: 'op1', type: 'op', op: '×', val: a, currentSide: 'left' }
@@ -556,7 +599,7 @@
         const b = getRandomInt(2, 8);
         const actualX = a * b;
 
-        return {
+        data = {
           left: [
             { id: 'box', type: 'box', label: '🎁' },
             { id: 'op1', type: 'op', op: '÷', val: a, currentSide: 'left' }
@@ -565,8 +608,10 @@
           targetAnswer: actualX
         };
       } else {
-        return createMixedLevelData();
+        data = createMixedLevelData();
       }
+
+      return maybePlaceBoxRandomly(data);
     }
 
     // Level 4: campuran perkalian & penjumlahan/pengurangan + kurung
@@ -724,17 +769,13 @@
 
       const { box, numbers, innerOps, outerOps } = splitInnerOuter(items);
 
-      if (side === 'left') {
-        if (box && innerOps.length > 0) {
-          appendParenGroup(zoneEl, [box, ...innerOps]);
-          outerOps.forEach((op) => zoneEl.appendChild(createCard(op)));
-          return;
-        }
-        items.forEach((item) => zoneEl.appendChild(createCard(item)));
+      if (box && innerOps.length > 0) {
+        appendParenGroup(zoneEl, [box, ...innerOps]);
+        outerOps.forEach((op) => zoneEl.appendChild(createCard(op)));
         return;
       }
 
-      if (outerOps.length > 0 && innerOps.length > 0) {
+      if (!box && outerOps.length > 0 && innerOps.length > 0) {
         appendParenGroup(zoneEl, [...numbers, ...outerOps]);
         innerOps.forEach((op) => zoneEl.appendChild(createCard(op)));
         return;
@@ -832,7 +873,9 @@
       }
 
       const innerIds = currentData.innerOpIds || [];
-      if (currentData.mixedPattern && innerIds.includes(item.id) && goingRight) {
+      const boxSide = getBoxSide();
+      const leavingBoxSide = oldSide === boxSide && newSide !== boxSide;
+      if (currentData.mixedPattern && innerIds.includes(item.id) && leavingBoxSide) {
         const outerStillHere = currentData[item.currentSide].filter(
           (i) => i.type === 'op' && !innerIds.includes(i.id)
         );
@@ -897,40 +940,46 @@
     }
 
     function updateStatusGuide() {
-      const remainingLeftOps = currentData.left.filter(i => i.type === 'op');
+      const boxSide = getBoxSide();
+      const solveSide = otherSide(boxSide);
+      const remainingBoxOps = currentData[boxSide].filter((i) => i.type === 'op');
       const preview = document.getElementById('calc-preview');
+      const away = awayDirectionLabel(boxSide);
 
-      if (remainingLeftOps.length === 0) {
+      if (remainingBoxOps.length === 0) {
+        const formulaItems = currentData[solveSide];
         const formula = currentData.mixedPattern
-          ? buildMixedFormula(currentData.right)
-          : currentData.right.map(formatToken).join(' ');
-        const steps = currentData.mixedPattern ? buildMixedSteps(currentData.right) : '';
+          ? buildMixedFormula(formulaItems)
+          : formulaItems.map(formatToken).join(' ');
+        const steps = currentData.mixedPattern ? buildMixedSteps(formulaItems) : '';
         preview.innerHTML = `Kotak sudah sendirian! Selesaikan: <b style="color:#38BDF8; font-size:20px;">${formula}</b>`
           + (steps ? `<br><span style="color:#FDE68A; font-size:14px;">${steps}</span>` : '');
       } else if (currentData.mixedPattern) {
-        const outerLeft = currentData.left.filter(
+        const outerOnBox = currentData[boxSide].filter(
           (i) => i.type === 'op' && !(currentData.innerOpIds || []).includes(i.id)
         );
-        if (outerLeft.length > 0) {
-          preview.innerText = `Geser dulu kartu di LUAR kurung (${outerLeft[0].op} ${outerLeft[0].val}) ke kanan.`;
+        if (outerOnBox.length > 0) {
+          preview.innerText = `Geser dulu kartu di LUAR kurung (${outerOnBox[0].op} ${outerOnBox[0].val}) ke ${away}.`;
         } else {
-          preview.innerText = `Bagus! Sekarang geser kartu di dalam kurung ke kanan agar 🎁 sendirian.`;
+          preview.innerText = `Bagus! Sekarang geser kartu di dalam kurung ke ${away} agar 🎁 sendirian.`;
         }
       } else {
-        preview.innerText = `Geser ${remainingLeftOps.length} kartu lagi ke kanan agar kotak 🎁 sendirian!`;
+        preview.innerText = `Geser ${remainingBoxOps.length} kartu lagi ke ${away} agar kotak 🎁 sendirian!`;
       }
     }
 
     // Tantangan Validasi & Reward Karakter
     function handleOpenBox() {
-      const remainingLeftOps = currentData.left.filter(i => i.type === 'op');
+      const boxSide = getBoxSide();
+      const remainingBoxOps = currentData[boxSide].filter((i) => i.type === 'op');
       const inputVal = parseInt(document.getElementById('answer-input').value);
       const feedback = document.getElementById('feedback');
+      const away = awayDirectionLabel(boxSide);
 
       // TANTANGAN 1: Wajib geser kartu dulu
-      if (remainingLeftOps.length > 0) {
+      if (remainingBoxOps.length > 0) {
         feedback.className = 'feedback warning';
-        feedback.innerText = `⚠️ Tidak bisa ditebak langsung! Geser kartu operasinya dulu ke kanan tanda sama dengan!`;
+        feedback.innerText = `⚠️ Tidak bisa ditebak langsung! Geser kartu operasinya dulu ke ${away} tanda sama dengan!`;
         return;
       }
 
@@ -952,7 +1001,8 @@
         document.getElementById('reward-modal').style.display = 'flex';
       } else {
         feedback.className = 'feedback error';
-        feedback.innerText = `Kurang tepat, ayo coba hitung ulang kembali sisi kanannya! Semangat! 💪`;
+        const solveLabel = boxSide === 'left' ? 'kanannya' : 'kirinya';
+        feedback.innerText = `Kurang tepat, ayo coba hitung ulang kembali sisi ${solveLabel}! Semangat! 💪`;
       }
     }
 
