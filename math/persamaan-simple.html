@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petualangan Kotak Hadiah Misterius! 🎁</title>
+  <style>
+    :root {
+      --bg: #F0F9FF;
+      --primary: #FF8E53;
+      --secondary: #4E65FF;
+      --accent: #FFD166;
+      --green: #06D6A0;
+      --card-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+      background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #1E293B;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      color: #0F172A;
+    }
+
+    .level-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .level-btn {
+      padding: 8px 14px;
+      background: #FFFFFF;
+      border: 2px solid #CBD5E1;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      transition: all 0.2s;
+    }
+
+    .level-btn.active {
+      background: #3B82F6;
+      color: white;
+      border-color: #2563EB;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(59,130,246,0.3);
+    }
+
+    .game-board {
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 780px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .instruction {
+      font-size: 16px;
+      color: #475569;
+      background: #FEF3C7;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border-left: 5px solid #F59E0B;
+      margin-bottom: 24px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Equation Scale / Area */
+    .equation-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .side-zone {
+      flex: 1;
+      min-height: 140px;
+      background: #F8FAFC;
+      border: 3px dashed #94A3B8;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px;
+      flex-wrap: wrap;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .side-zone.drag-over {
+      background: #E0F2FE;
+      border-color: #38BDF8;
+    }
+
+    .equals-bridge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 32px;
+      font-weight: bold;
+      color: #78350F;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .equals-bridge::after {
+      content: '🔄 Berubah Tanda!';
+      position: absolute;
+      bottom: -22px;
+      font-size: 9px;
+      white-space: nowrap;
+      color: #64748B;
+      font-weight: normal;
+    }
+
+    /* Cards */
+    .card {
+      padding: 12px 18px;
+      border-radius: 16px;
+      font-size: 26px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      touch-action: none;
+    }
+
+    .card.box {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      min-width: 90px;
+      cursor: default;
+    }
+
+    .card.draggable-op {
+      background: linear-gradient(135deg, #4E65FF, #92EFFD);
+      color: #0F172A;
+      cursor: grab;
+      border: 2px solid #38BDF8;
+      transition: transform 0.15s;
+    }
+
+    .card.draggable-op:active {
+      cursor: grabbing;
+      transform: scale(1.08);
+    }
+
+    .card.number-static {
+      background: #E2E8F0;
+      color: #1E293B;
+      min-width: 50px;
+    }
+
+    /* Result Calculation Section */
+    .solution-box {
+      width: 100%;
+      background: #F1F5F9;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .calc-preview {
+      font-size: 20px;
+      color: #334155;
+    }
+
+    .guess-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="number"] {
+      width: 100px;
+      height: 48px;
+      font-size: 24px;
+      text-align: center;
+      border-radius: 12px;
+      border: 3px solid #CBD5E1;
+      font-weight: bold;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: #3B82F6;
+    }
+
+    button.check-btn {
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(6,214,160,0.4);
+      transition: 0.2s;
+    }
+
+    button.check-btn:active {
+      transform: translateY(2px);
+    }
+
+    .feedback {
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 28px;
+      text-align: center;
+    }
+
+    .feedback.success { color: #059669; }
+    .feedback.error { color: #DC2626; }
+
+    /* Confetti Animation */
+    @keyframes pop {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-animate {
+      animation: pop 0.3s ease forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎁 Petualangan Kotak Hadiah</h1>
+    <p style="margin: 0; color: #475569;">Bantu cari tahu isi rahasia di dalam kotak!</p>
+  </header>
+
+  <div class="level-tabs">
+    <button class="level-btn active" onclick="loadLevel(0)">Level 1: Tambah & Kurang</button>
+    <button class="level-btn" onclick="loadLevel(1)">Level 2: Perkalian</button>
+    <button class="level-btn" onclick="loadLevel(2)">Level 3: Pembagian</button>
+    <button class="level-btn" onclick="loadLevel(3)">Level 4: Operasi Campuran</button>
+  </div>
+
+  <div class="game-board">
+    <div class="instruction" id="instruction-text">
+      👉 Geser kartu operasi melewati tanda <b>=</b> untuk menyendirikan kotak hadiah!
+    </div>
+
+    <div class="equation-container">
+      <!-- Sisi Kiri -->
+      <div class="side-zone" id="left-zone" data-side="left"></div>
+
+      <!-- Jembatan Tanda Sama Dengan -->
+      <div class="equals-bridge">=</div>
+
+      <!-- Sisi Kanan -->
+      <div class="side-zone" id="right-zone" data-side="right"></div>
+    </div>
+
+    <!-- Area Hitung / Buka Hadiah -->
+    <div class="solution-box">
+      <div class="calc-preview" id="calc-preview">Pindahkan operasi ke sisi kanan dahulu.</div>
+      <div class="guess-row" id="guess-row" style="display: none;">
+        <span>🎁 = </span>
+        <input type="number" id="answer-input" placeholder="?">
+        <button class="check-btn" onclick="checkAnswer()">Buka Kotak! 🎉</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </div>
+
+  <script>
+    // Data Level Soal
+    const levels = [
+      // Level 1: Pengurangan / Penjumlahan sederhana
+      {
+        question: "Kotak dikurangi 3 hasilnya 4",
+        left: [
+          { id: 'box', type: 'box', label: '🎁' },
+          { id: 'op1', type: 'op', op: '-', val: 3, currentSide: 'left' }
+        ],
+        right: [
+          { id: 'res', type: 'number', val: 4 }
+        ],
+        targetAnswer: 7
+      },
+      // Level 2: Perkalian
+      {
+        question: "Kotak dikali 3 hasilnya 12",
+        left: [
+          { id: 'box', type: 'box', label: '🎁' },
+          { id: 'op1', type: 'op', op: '×', val: 3, currentSide: 'left' }
+        ],
+        right: [
+          { id: 'res', type: 'number', val: 12 }
+        ],
+        targetAnswer: 4
+      },
+      // Level 3: Pembagian
+      {
+        question: "Kotak dibagi 2 hasilnya 5",
+        left: [
+          { id: 'box', type: 'box', label: '🎁' },
+          { id: 'op1', type: 'op', op: '÷', val: 2, currentSide: 'left' }
+        ],
+        right: [
+          { id: 'res', type: 'number', val: 5 }
+        ],
+        targetAnswer: 10
+      },
+      // Level 4: Operasi Campuran (2 langkah)
+      {
+        question: "Kotak dikali 2, lalu ditambah 1 hasilnya 9",
+        left: [
+          { id: 'box', type: 'box', label: '🎁' },
+          { id: 'op1', type: 'op', op: '×', val: 2, currentSide: 'left' },
+          { id: 'op2', type: 'op', op: '+', val: 1, currentSide: 'left' }
+        ],
+        right: [
+          { id: 'res', type: 'number', val: 9 }
+        ],
+        targetAnswer: 4
+      }
+    ];
+
+    let currentLevelIdx = 0;
+    let currentData = null;
+
+    // Pasangan Inversi Operasi Otomatis
+    const inverseOps = {
+      '+': '-',
+      '-': '+',
+      '×': '÷',
+      '÷': '×'
+    };
+
+    function loadLevel(idx) {
+      currentLevelIdx = idx;
+      // Deep copy data level
+      currentData = JSON.parse(JSON.stringify(levels[idx]));
+
+      // Update tab active state
+      document.querySelectorAll('.level-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+
+      document.getElementById('feedback').innerText = '';
+      document.getElementById('answer-input').value = '';
+      renderBoard();
+    }
+
+    function renderBoard() {
+      const leftZone = document.getElementById('left-zone');
+      const rightZone = document.getElementById('right-zone');
+
+      leftZone.innerHTML = '';
+      rightZone.innerHTML = '';
+
+      // Render Sisi Kiri
+      currentData.left.forEach(item => {
+        leftZone.appendChild(createCardElement(item));
+      });
+
+      // Render Sisi Kanan
+      currentData.right.forEach(item => {
+        rightZone.appendChild(createCardElement(item));
+      });
+
+      setupDropZones();
+      updateSolutionUI();
+    }
+
+    function createCardElement(item) {
+      const card = document.createElement('div');
+      card.id = item.id;
+      card.classList.add('card', 'pop-animate');
+
+      if (item.type === 'box') {
+        card.classList.add('box');
+        card.innerText = item.label;
+      } else if (item.type === 'op') {
+        card.classList.add('draggable-op');
+        card.innerText = `${item.op} ${item.val}`;
+        card.draggable = true;
+        setupDragEvents(card, item);
+      } else if (item.type === 'number') {
+        card.classList.add('number-static');
+        card.innerText = item.val;
+      }
+
+      return card;
+    }
+
+    // Drag & Drop Handling (Support Touch & Mouse)
+    let draggedItem = null;
+
+    function setupDragEvents(card, itemData) {
+      // HTML5 Drag (Desktop)
+      card.addEventListener('dragstart', (e) => {
+        draggedItem = itemData;
+        e.dataTransfer.setData('text/plain', itemData.id);
+        setTimeout(() => card.style.opacity = '0.4', 0);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.style.opacity = '1';
+        draggedItem = null;
+      });
+
+      // Touch Events (Tablet / Ponsel)
+      let touchStartX = 0, touchStartY = 0;
+      card.addEventListener('touchstart', (e) => {
+        draggedItem = itemData;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+
+      card.addEventListener('touchend', (e) => {
+        const touch = e.changedTouches[0];
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetZone = elemBelow ? elemBelow.closest('.side-zone') : null;
+
+        if (targetZone && targetZone.dataset.side !== draggedItem.currentSide) {
+          handleMoveCard(draggedItem, targetZone.dataset.side);
+        }
+        draggedItem = null;
+      });
+    }
+
+    function setupDropZones() {
+      const zones = document.querySelectorAll('.side-zone');
+      zones.forEach(zone => {
+        zone.ondragover = (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
+        };
+
+        zone.ondragleave = () => {
+          zone.classList.remove('drag-over');
+        };
+
+        zone.ondrop = (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+          const targetSide = zone.dataset.side;
+
+          if (draggedItem && draggedItem.currentSide !== targetSide) {
+            handleMoveCard(draggedItem, targetSide);
+          }
+        };
+      });
+    }
+
+    // Logika Pemindahan dan Pembalikan Tanda Otomatis
+    function handleMoveCard(item, newSide) {
+      const oldSide = item.currentSide;
+
+      // Hapus dari sisi lama
+      currentData[oldSide] = currentData[oldSide].filter(it => it.id !== item.id);
+
+      // Balik tanda operator secara otomatis
+      item.op = inverseOps[item.op];
+      item.currentSide = newSide;
+
+      // Tambahkan ke sisi baru
+      currentData[newSide].push(item);
+
+      renderBoard();
+    }
+
+    function updateSolutionUI() {
+      const remainingLeftOps = currentData.left.filter(it => it.type === 'op');
+      const calcPreview = document.getElementById('calc-preview');
+      const guessRow = document.getElementById('guess-row');
+
+      if (remainingLeftOps.length === 0) {
+        // Semua operasi sudah diseberangkan ke kanan
+        guessRow.style.display = 'flex';
+        
+        // Buat representasi teks rumus di kanan
+        let exprStr = '';
+        currentData.right.forEach((it) => {
+          if (it.type === 'number') exprStr += `${it.val} `;
+          if (it.type === 'op') exprStr += `${it.op} ${it.val} `;
+        });
+
+        calcPreview.innerHTML = `Sekarang kotak sudah sendiri! 💡 Hitung: <b>${exprStr}</b>`;
+      } else {
+        guessRow.style.display = 'none';
+        calcPreview.innerText = `Geser ${remainingLeftOps.length} operasi lagi dari kiri ke sisi kanan!`;
+      }
+    }
+
+    function checkAnswer() {
+      const val = parseInt(document.getElementById('answer-input').value);
+      const feedback = document.getElementById('feedback');
+      const boxCard = document.getElementById('box');
+
+      if (val === currentData.targetAnswer) {
+        feedback.className = 'feedback success';
+        feedback.innerText = `✨ HORE BENAR! Isi kotak adalah ${val}! 🎉`;
+        boxCard.innerText = `🎁 = ${val}`;
+        boxCard.style.background = '#06D6A0';
+      } else {
+        feedback.className = 'feedback error';
+        feedback.innerText = `Masih kurang pas, yuk coba hitung kembali sisi kanannya! 😊`;
+      }
+    }
+
+    // Inisialisasi awal
+    loadLevel(0);
+  </script>
+</body>
+</html>
