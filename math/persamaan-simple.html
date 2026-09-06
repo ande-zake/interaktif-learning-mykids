@@ -213,6 +213,7 @@
       min-width: 90px;
       border: 2px solid #FEF08A;
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+      cursor: default;
     }
 
     .card.draggable-op {
@@ -856,10 +857,9 @@
       // #endregion
 
       if (item.type === 'box') {
-        card.classList.add('box', 'can-drag-left');
+        card.classList.add('box');
         card.innerText = item.label;
-        card.draggable = true;
-        setupDragAndTouch(card, item);
+        card.draggable = false;
       } else if (item.type === 'op') {
         card.classList.add('draggable-op');
         card.innerText = `${item.op} ${item.val}`;
@@ -1006,6 +1006,12 @@
     }
 
     function executeMove(item, newSide) {
+      if (item.type === 'box') {
+        // #region agent log
+        fetch('http://127.0.0.1:7535/ingest/c1b3bb57-71d3-4d29-a2c5-6440244dcf78',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'043c88'},body:JSON.stringify({sessionId:'043c88',runId:'post-fix',hypothesisId:'BOX',location:'persamaan-simple.html:executeMove:box-blocked',message:'box move rejected',data:{id:item.id,oldSide:item.currentSide,newSide:newSide},timestamp:Date.now()})}).catch(function(){});
+        // #endregion
+        return;
+      }
       const oldSide = item.currentSide;
       const goingRight = oldSide === 'left' && newSide === 'right';
       const goingLeft = oldSide === 'right' && newSide === 'left';
