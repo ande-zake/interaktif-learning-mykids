@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dunia Belajar Petualang Cilik! 🚀🌟</title>
+  <style>
+    :root {
+      --bg-color: #F0FDF4;
+      --card-math: linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%);
+      --card-english: linear-gradient(135deg, #4E65FF 0%, #92EFFD 100%);
+      --card-science: linear-gradient(135deg, #06D6A0 0%, #1B9AAA 100%);
+      --card-art: linear-gradient(135deg, #FFD166 0%, #F78C6B 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+      background: linear-gradient(180deg, #EFF6FF 0%, #FEF3C7 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #1E293B;
+    }
+
+    /* Header & Avatar */
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-size: 54px;
+      animation: floating 2.5s ease-in-out infinite;
+    }
+
+    h1 {
+      margin: 8px 0 6px 0;
+      font-size: 32px;
+      color: #0F172A;
+      text-shadow: 2px 2px 0px #FFFFFF;
+    }
+
+    p.subtitle {
+      margin: 0;
+      font-size: 18px;
+      color: #475569;
+      font-weight: bold;
+    }
+
+    /* Container Materi */
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Kategori Box */
+    .category-section {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+      border: 3px solid #FFFFFF;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .category-header h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #1E293B;
+    }
+
+    /* Grid Kartu Modul */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    /* Link Kartu */
+    .module-card {
+      text-decoration: none;
+      border-radius: 22px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module-card:hover, .module-card:active {
+      transform: scale(1.04) translateY(-4px);
+      box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    /* Gaya Spesifik Warna Modul */
+    .card-math { background: var(--card-math); }
+    .card-english { background: var(--card-english); }
+    .card-science { background: var(--card-science); }
+    .card-art { background: var(--card-art); }
+
+    .module-icon {
+      font-size: 44px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+    }
+
+    .module-title {
+      font-size: 19px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .module-desc {
+      font-size: 13px;
+      opacity: 0.95;
+      line-height: 1.3;
+    }
+
+    .badge-play {
+      margin-top: 14px;
+      background: white;
+      color: #0F172A;
+      font-size: 13px;
+      font-weight: bold;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Kartu Yang Masih Segera Hadir (Coming Soon) */
+    .module-card.locked {
+      background: #E2E8F0;
+      color: #64748B;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .module-card.locked:hover {
+      transform: none;
+    }
+    .module-card.locked .badge-play {
+      background: #CBD5E1;
+      color: #64748B;
+    }
+
+    /* Animasi Mengambang Lucu */
+    @keyframes floating {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(3deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    /* Responsif Tablet / iPad */
+    @media (max-width: 600px) {
+      h1 { font-size: 26px; }
+      .modules-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="hero-badge">🎒✨</div>
+    <h1>Taman Belajar Petualang!</h1>
+    <p class="subtitle">Pilih petualangan seru yang ingin kamu mainkan hari ini 👇</p>
+  </header>
+
+  <div class="container">
+
+    <!-- KATEGORI: MATEMATIKA -->
+    <section class="category-section">
+      <div class="category-header">
+        <span style="font-size: 30px;">🔢</span>
+        <h2>Matematika Ajaib</h2>
+      </div>
+      <div class="modules-grid">
+        
+        <!-- Link ke game persamaan matematika anak -->
+        <a href="math/persamaan-simple.html" class="module-card card-math">
+          <div class="module-icon">🎁⚖️</div>
+          <div class="module-title">Kotak Misteri Persamaan</div>
+          <div class="module-desc">Geser kartu angka melewati tanda sama dengan untuk membuka rahasia kotak!</div>
+          <div class="badge-play">Main Sekarang! 🚀</div>
+        </a>
+
+        <!-- Tempat untuk modul matematika berikutnya -->
+        <div class="module-card locked">
+          <div class="module-icon">🍕</div>
+          <div class="module-title">Pecahan Pizza Lezat</div>
+          <div class="module-desc">Belajar pecahan 1/2, 1/4 dengan memotong loyang pizza.</div>
+          <div class="badge-play">Segera Hadir 🔒</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- KATEGORI: BAHASA INGGRIS -->
+    <section class="category-section">
+      <div class="category-header">
+        <span style="font-size: 30px;">🌍</span>
+        <h2>English Adventure</h2>
+      </div>
+      <div class="modules-grid">
+        
+        <!-- Contoh modul Bahasa Inggris nanti -->
+        <div class="module-card locked">
+          <div class="module-icon">🦁🧩</div>
+          <div class="module-title">Tebak Nama Hewan</div>
+          <div class="module-desc">Belajar kosakata binatang dan suaranya dalam Bahasa Inggris.</div>
+          <div class="badge-play">Segera Hadir 🔒</div>
+        </div>
+
+        <div class="module-card locked">
+          <div class="module-icon">⏰</div>
+          <div class="module-title">Telling Time</div>
+          <div class="module-desc">Putar jarum jam dan sebutkan waktu dalam Bahasa Inggris.</div>
+          <div class="badge-play">Segera Hadir 🔒</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- KATEGORI: SAINS & KREASI (OPSIONAL) -->
+    <section class="category-section">
+      <div class="category-header">
+        <span style="font-size: 30px;">🌱</span>
+        <h2>Sains & Alam Cilik</h2>
+      </div>
+      <div class="modules-grid">
+        <div class="module-card locked">
+          <div class="module-icon">🪐</div>
+          <div class="module-title">Jelajah Tata Surya</div>
+          <div class="module-desc">Kunjungi planet Mars, Jupiter, dan Saturnus!</div>
+          <div class="badge-play">Segera Hadir 🔒</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
