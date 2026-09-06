@@ -359,46 +359,34 @@
       background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
       border: 4px solid #F59E0B;
       border-radius: 28px;
-      padding: 24px;
+      padding: 20px 22px 24px;
       text-align: center;
       box-shadow: 0 0 35px rgba(245, 158, 11, 0.6);
-      max-width: 90%;
-      width: 380px;
+      max-width: 92%;
+      width: 420px;
       position: relative;
     }
 
-    /* Animasi Karakter SVG Pedang Bergerak */
     .character-avatar {
-      width: 140px;
-      height: 140px;
-      margin: 0 auto 12px auto;
+      width: min(320px, 80vw);
+      height: auto;
+      margin: 0 auto 8px auto;
       position: relative;
       animation: charJump 1s infinite alternate ease-in-out;
     }
 
-    .sword-slash {
-      transform-origin: 20px 80px;
-      animation: slashMotion 0.8s infinite ease-in-out alternate;
-    }
-
-    .fire-aura {
-      animation: pulseFire 0.7s infinite alternate;
-      transform-origin: center;
+    .character-avatar img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.55));
+      pointer-events: none;
     }
 
     @keyframes charJump {
       0% { transform: translateY(0px) rotate(0deg); }
-      100% { transform: translateY(-16px) rotate(2deg); }
-    }
-
-    @keyframes slashMotion {
-      0% { transform: rotate(-15deg); }
-      100% { transform: rotate(45deg); }
-    }
-
-    @keyframes pulseFire {
-      0% { transform: scale(0.95); opacity: 0.7; }
-      100% { transform: scale(1.1); opacity: 1; }
+      100% { transform: translateY(-12px) rotate(1deg); }
     }
 
     @keyframes fadeIn {
@@ -454,43 +442,11 @@
   <!-- POPUP REWARD ANIMASI DEMON SLAYER -->
   <div class="reward-overlay" id="reward-modal">
     <div class="reward-box">
-      <!-- Karakter Animasi SVG: Tanjiro Chibi dengan Pedang Nichirin & Api Hinokami -->
       <div class="character-avatar">
-        <svg viewBox="0 0 120 120" width="100%" height="100%">
-          <!-- Api Hinokami Kagura -->
-          <circle class="fire-aura" cx="60" cy="60" r="54" fill="none" stroke="#F59E0B" stroke-width="6" stroke-dasharray="10 8" />
-          <circle class="fire-aura" cx="60" cy="60" r="48" fill="none" stroke="#EF4444" stroke-width="4" />
-          
-          <!-- Rambut & Wajah -->
-          <circle cx="60" cy="50" r="26" fill="#FCD34D" /> <!-- Wajah -->
-          <path d="M 36 45 Q 60 20 84 45 Q 60 30 36 45" fill="#7F1D1D" /> <!-- Rambut depan -->
-          <!-- Anting Hanafuda -->
-          <rect x="33" y="52" width="5" height="12" fill="#FFFFFF" stroke="#111" stroke-width="1"/>
-          <circle cx="35.5" cy="55" r="1.5" fill="#EF4444" />
-          <!-- Mata -->
-          <circle cx="52" cy="50" r="4" fill="#7F1D1D" />
-          <circle cx="68" cy="50" r="4" fill="#7F1D1D" />
-          <circle cx="53" cy="49" r="1.5" fill="#FFF" />
-          <circle cx="69" cy="49" r="1.5" fill="#FFF" />
-          <!-- Senyum Lebar -->
-          <path d="M 54 60 Q 60 66 66 60" stroke="#7F1D1D" stroke-width="2.5" fill="none" stroke-linecap="round" />
-          <!-- Tanda Lahir Tanjiro -->
-          <path d="M 68 36 Q 73 38 72 44" stroke="#B91C1C" stroke-width="3" fill="none" />
-          
-          <!-- Badan / Haori Kotak-kotak Hijau Hitam -->
-          <path d="M 40 76 L 80 76 L 86 106 L 34 106 Z" fill="#0A5C36" />
-          <rect x="48" y="76" width="12" height="30" fill="#111827" />
-          <rect x="68" y="76" width="8" height="30" fill="#111827" />
-
-          <!-- Tangan & Pedang Nichirin Bergerak -->
-          <g class="sword-slash">
-            <rect x="75" y="70" width="45" height="4" fill="#1F2937" rx="2" stroke="#DC2626" stroke-width="1.5" />
-            <circle cx="75" cy="72" r="5" fill="#F59E0B" />
-          </g>
-        </svg>
+        <img id="reward-character" src="images/tanjiro-reward.png" alt="Tanjiro Kamado">
       </div>
 
-      <h2 style="margin: 6px 0; color: #FBBF24;">LUAR BIASA! 💥</h2>
+      <h2 id="reward-title" style="margin: 6px 0; color: #FBBF24;">LUAR BIASA! 💥</h2>
       <p style="color: #E2E8F0; font-size: 15px; margin-bottom: 18px;" id="reward-desc">
         Kamu berhasil memecahkan teka-teki kotak dan mengeluarkan jurus pernapasan!
       </p>
@@ -512,6 +468,60 @@
       '×': '÷',
       '÷': '×'
     };
+
+    const rewardCharacters = [
+      {
+        src: 'images/tanjiro-reward.png',
+        name: 'Tanjiro',
+        title: 'Hinokami Kagura! 🔥',
+        praise: 'Tanjiro bangga dengan kemampuan analisismu!'
+      },
+      {
+        src: 'images/shinobu-reward.png',
+        name: 'Shinobu',
+        title: 'Jurus Kupu-Kupu! 🦋',
+        praise: 'Shinobu tersenyum: ketelitianmu sangat indah.'
+      },
+      {
+        src: 'images/zenitsu-reward.png',
+        name: 'Zenitsu',
+        title: 'Pernapasan Petir! ⚡',
+        praise: 'Zenitsu kaget... kamu hebat sekali!'
+      },
+      {
+        src: 'images/rengoku-reward.png',
+        name: 'Rengoku',
+        title: 'UMAI! Setinggi api! 🔥',
+        praise: 'Rengoku berteriak: semangatmu membara!'
+      },
+      {
+        src: 'images/inosuke-reward.png',
+        name: 'Inosuke',
+        title: 'Raja Gunung! 🐗',
+        praise: 'Inosuke mengaku: otakmu lebih kuat dari ototnya!'
+      },
+      {
+        src: 'images/inosuke-chibi-reward.png',
+        name: 'Inosuke',
+        title: 'Serangan Ganda! ⚔️',
+        praise: 'Inosuke tanpa topeng pun kagum pada hitunganmu!'
+      }
+    ];
+
+    function pickRewardCharacter() {
+      return rewardCharacters[Math.floor(Math.random() * rewardCharacters.length)];
+    }
+
+    function showRewardModal(answer) {
+      const hero = pickRewardCharacter();
+      const img = document.getElementById('reward-character');
+      img.src = hero.src;
+      img.alt = hero.name;
+      document.getElementById('reward-title').innerText = hero.title;
+      document.getElementById('reward-desc').innerHTML =
+        `Hebat sekali! Isi kotak 🎁 adalah <b>${answer}</b>.<br>${hero.praise}`;
+      document.getElementById('reward-modal').style.display = 'flex';
+    }
 
     // Generator Soal Acak
     function getRandomInt(min, max) {
@@ -995,10 +1005,7 @@
         feedback.className = 'feedback success';
         feedback.innerText = `BENAR! Kotak Terbuka! 🌟`;
 
-        // Tampilkan Modal Demon Slayer
-        document.getElementById('reward-desc').innerHTML = 
-          `Hebat sekali! Isi kotak 🎁 adalah <b>${inputVal}</b>.<br>Tanjiro bangga dengan kemampuan analisismu!`;
-        document.getElementById('reward-modal').style.display = 'flex';
+        showRewardModal(inputVal);
       } else {
         feedback.className = 'feedback error';
         const solveLabel = boxSide === 'left' ? 'kanannya' : 'kirinya';
